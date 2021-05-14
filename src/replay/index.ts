@@ -1075,20 +1075,24 @@ export class Replayer {
       // target may be removed with its parents before
       mirror.removeNodeFromMap(target);
       if (parent) {
-        const realParent =
-          '__sn' in parent ? this.fragmentParentMap.get(parent) : undefined;
-        if (realParent && realParent.contains(target)) {
-          realParent.removeChild(target);
-        } else if (this.fragmentParentMap.has(target)) {
-          /**
-           * the target itself is a fragment document and it's not in the dom
-           * so we should remove the real target from its parent
-           */
-          const realTarget = this.fragmentParentMap.get(target)!;
-          parent.removeChild(realTarget);
-          this.fragmentParentMap.delete(target);
-        } else {
-          parent.removeChild(target);
+        try {
+          const realParent =
+            '__sn' in parent ? this.fragmentParentMap.get(parent) : undefined;
+          if (realParent && realParent.contains(target)) {
+            realParent.removeChild(target);
+          } else if (this.fragmentParentMap.has(target)) {
+            /**
+             * the target itself is a fragment document and it's not in the dom
+             * so we should remove the real target from its parent
+             */
+            const realTarget = this.fragmentParentMap.get(target)!;
+            parent.removeChild(realTarget);
+            this.fragmentParentMap.delete(target);
+          } else {
+            parent.removeChild(target);
+          }
+        } catch (error) {
+          console.warn('issue#88');
         }
       }
     });
