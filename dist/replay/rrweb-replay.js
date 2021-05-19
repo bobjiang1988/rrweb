@@ -723,7 +723,7 @@ var rrwebReplay = (function (exports) {
             doc.open();
             node = doc;
         }
-        node.__sn = n;
+        node.__zzhl_sn = n;
         map[n.id] = node;
         if ((n.type === NodeType.Document || n.type === NodeType.Element) &&
             !skipChild) {
@@ -764,7 +764,7 @@ var rrwebReplay = (function (exports) {
         }
     }
     function handleScroll(node) {
-        var n = node.__sn;
+        var n = node.__zzhl_sn;
         if (n.type !== NodeType.Element) {
             return;
         }
@@ -1257,16 +1257,16 @@ var rrwebReplay = (function (exports) {
     var mirror = {
         map: {},
         getId: function (n) {
-            if (!n.__sn) {
+            if (!n.__zzhl_sn) {
                 return -1;
             }
-            return n.__sn.id;
+            return n.__zzhl_sn.id;
         },
         getNode: function (id) {
             return mirror.map[id] || null;
         },
         removeNodeFromMap: function (n) {
-            var id = n.__sn && n.__sn.id;
+            var id = n.__zzhl_sn && n.__zzhl_sn.id;
             delete mirror.map[id];
             if (n.childNodes) {
                 n.childNodes.forEach(function (child) {
@@ -1359,8 +1359,8 @@ var rrwebReplay = (function (exports) {
                 _this.removeIdSet.add(id);
                 var node = mirror.getNode(id);
                 node === null || node === void 0 ? void 0 : node.childNodes.forEach(function (childNode) {
-                    if ('__sn' in childNode) {
-                        deepRemoveFromMirror(childNode.__sn.id);
+                    if ('__zzhl_sn' in childNode) {
+                        deepRemoveFromMirror(childNode.__zzhl_sn.id);
                     }
                 });
             };
@@ -1555,8 +1555,8 @@ var rrwebReplay = (function (exports) {
         }
     }
     function isIframeINode(node) {
-        if ('__sn' in node) {
-            return (node.__sn.type === NodeType.Element && node.__sn.tagName === 'iframe');
+        if ('__zzhl_sn' in node) {
+            return (node.__zzhl_sn.type === NodeType.Element && node.__zzhl_sn.tagName === 'iframe');
         }
         return false;
     }
@@ -2414,7 +2414,7 @@ var rrwebReplay = (function (exports) {
         };
         Replayer.prototype.collectIframeAndAttachDocument = function (collected, builtNode) {
             if (isIframeINode(builtNode)) {
-                var mutationInQueue = this.newDocumentQueue.find(function (m) { return m.parentId === builtNode.__sn.id; });
+                var mutationInQueue = this.newDocumentQueue.find(function (m) { return m.parentId === builtNode.__zzhl_sn.id; });
                 if (mutationInQueue) {
                     collected.push({ mutationInQueue: mutationInQueue, builtNode: builtNode });
                 }
@@ -2779,7 +2779,7 @@ var rrwebReplay = (function (exports) {
                 mirror.removeNodeFromMap(target);
                 if (parent) {
                     try {
-                        var realParent = '__sn' in parent ? _this.fragmentParentMap.get(parent) : undefined;
+                        var realParent = '__zzhl_sn' in parent ? _this.fragmentParentMap.get(parent) : undefined;
                         if (realParent && realParent.contains(target)) {
                             realParent.removeChild(target);
                         }
@@ -2899,7 +2899,7 @@ var rrwebReplay = (function (exports) {
                     parent.appendChild(target);
                 }
                 if (isIframeINode(target)) {
-                    var mutationInQueue_1 = _this.newDocumentQueue.find(function (m) { return m.parentId === target.__sn.id; });
+                    var mutationInQueue_1 = _this.newDocumentQueue.find(function (m) { return m.parentId === target.__zzhl_sn.id; });
                     if (mutationInQueue_1) {
                         _this.attachDocumentToIframe(mutationInQueue_1, target);
                         _this.newDocumentQueue = _this.newDocumentQueue.filter(function (m) { return m !== mutationInQueue_1; });
@@ -3165,9 +3165,9 @@ var rrwebReplay = (function (exports) {
             });
         };
         Replayer.prototype.restoreRealParent = function (frag, parent) {
-            mirror.map[parent.__sn.id] = parent;
-            if (parent.__sn.type === NodeType.Element &&
-                parent.__sn.tagName === 'textarea' &&
+            mirror.map[parent.__zzhl_sn.id] = parent;
+            if (parent.__zzhl_sn.type === NodeType.Element &&
+                parent.__zzhl_sn.tagName === 'textarea' &&
                 frag.textContent) {
                 parent.value = frag.textContent;
             }

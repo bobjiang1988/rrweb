@@ -654,7 +654,7 @@ export class Replayer {
   ) {
     if (isIframeINode(builtNode)) {
       const mutationInQueue = this.newDocumentQueue.find(
-        (m) => m.parentId === builtNode.__sn.id,
+        (m) => m.parentId === builtNode.__zzhl_sn.id,
       );
       if (mutationInQueue) {
         collected.push({ mutationInQueue, builtNode });
@@ -1077,7 +1077,7 @@ export class Replayer {
       if (parent) {
         try {
           const realParent =
-            '__sn' in parent ? this.fragmentParentMap.get(parent) : undefined;
+            '__zzhl_sn' in parent ? this.fragmentParentMap.get(parent) : undefined;
           if (realParent && realParent.contains(target)) {
             realParent.removeChild(target);
           } else if (this.fragmentParentMap.has(target)) {
@@ -1235,7 +1235,7 @@ export class Replayer {
 
       if (isIframeINode(target)) {
         const mutationInQueue = this.newDocumentQueue.find(
-          (m) => m.parentId === target.__sn.id,
+          (m) => m.parentId === target.__zzhl_sn.id,
         );
         if (mutationInQueue) {
           this.attachDocumentToIframe(mutationInQueue, target);
@@ -1550,14 +1550,14 @@ export class Replayer {
    * @param parent real parent element
    */
   private restoreRealParent(frag: INode, parent: INode) {
-    mirror.map[parent.__sn.id] = parent;
+    mirror.map[parent.__zzhl_sn.id] = parent;
     /**
      * If we have already set value attribute on textarea,
      * then we could not apply text content as default value any more.
      */
     if (
-      parent.__sn.type === NodeType.Element &&
-      parent.__sn.tagName === 'textarea' &&
+      parent.__zzhl_sn.type === NodeType.Element &&
+      parent.__zzhl_sn.tagName === 'textarea' &&
       frag.textContent
     ) {
       ((parent as unknown) as HTMLTextAreaElement).value = frag.textContent;

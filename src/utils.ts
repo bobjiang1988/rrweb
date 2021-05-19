@@ -38,17 +38,17 @@ export const mirror: Mirror = {
   map: {},
   getId(n) {
     // if n is not a serialized INode, use -1 as its id.
-    if (!n.__sn) {
+    if (!n.__zzhl_sn) {
       return -1;
     }
-    return n.__sn.id;
+    return n.__zzhl_sn.id;
   },
   getNode(id) {
     return mirror.map[id] || null;
   },
   // TODO: use a weakmap to get rid of manually memory management
   removeNodeFromMap(n) {
-    const id = n.__sn && n.__sn.id;
+    const id = n.__zzhl_sn && n.__zzhl_sn.id;
     delete mirror.map[id];
     if (n.childNodes) {
       n.childNodes.forEach((child) =>
@@ -208,8 +208,8 @@ export function isBlocked(node: Node | null, blockClass: blockClass): boolean {
 }
 
 export function isIgnored(n: Node | INode): boolean {
-  if ('__sn' in n) {
-    return (n as INode).__sn.id === IGNORED_NODE;
+  if ('__zzhl_sn' in n) {
+    return (n as INode).__zzhl_sn.id === IGNORED_NODE;
   }
   // The main part of the slimDOM check happens in
   // rrweb-snapshot::serializeNodeWithId
@@ -353,8 +353,8 @@ export class TreeIndex {
       this.removeIdSet.add(id);
       const node = mirror.getNode(id);
       node?.childNodes.forEach((childNode) => {
-        if ('__sn' in childNode) {
-          deepRemoveFromMirror(((childNode as unknown) as INode).__sn.id);
+        if ('__zzhl_sn' in childNode) {
+          deepRemoveFromMirror(((childNode as unknown) as INode).__zzhl_sn.id);
         }
       });
     };
@@ -560,7 +560,7 @@ export function iterateResolveTree(
 }
 
 type HTMLIFrameINode = HTMLIFrameElement & {
-  __sn: serializedNodeWithId;
+  __zzhl_sn: serializedNodeWithId;
 };
 export type AppendedIframe = {
   mutationInQueue: addedNodeMutation;
@@ -570,9 +570,9 @@ export type AppendedIframe = {
 export function isIframeINode(
   node: INode | ShadowRoot,
 ): node is HTMLIFrameINode {
-  if ('__sn' in node) {
+  if ('__zzhl_sn' in node) {
     return (
-      node.__sn.type === NodeType.Element && node.__sn.tagName === 'iframe'
+      node.__zzhl_sn.type === NodeType.Element && node.__zzhl_sn.tagName === 'iframe'
     );
   }
   // node can be document fragment when using the virtual parent feature

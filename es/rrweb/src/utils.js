@@ -11,16 +11,16 @@ function on(type, fn, target) {
 var mirror = {
     map: {},
     getId: function (n) {
-        if (!n.__sn) {
+        if (!n.__zzhl_sn) {
             return -1;
         }
-        return n.__sn.id;
+        return n.__zzhl_sn.id;
     },
     getNode: function (id) {
         return mirror.map[id] || null;
     },
     removeNodeFromMap: function (n) {
-        var id = n.__sn && n.__sn.id;
+        var id = n.__zzhl_sn && n.__zzhl_sn.id;
         delete mirror.map[id];
         if (n.childNodes) {
             n.childNodes.forEach(function (child) {
@@ -141,8 +141,8 @@ function isBlocked(node, blockClass) {
     return isBlocked(node.parentNode, blockClass);
 }
 function isIgnored(n) {
-    if ('__sn' in n) {
-        return n.__sn.id === IGNORED_NODE;
+    if ('__zzhl_sn' in n) {
+        return n.__zzhl_sn.id === IGNORED_NODE;
     }
     return false;
 }
@@ -244,8 +244,8 @@ var TreeIndex = (function () {
             _this.removeIdSet.add(id);
             var node = mirror.getNode(id);
             node === null || node === void 0 ? void 0 : node.childNodes.forEach(function (childNode) {
-                if ('__sn' in childNode) {
-                    deepRemoveFromMirror(childNode.__sn.id);
+                if ('__zzhl_sn' in childNode) {
+                    deepRemoveFromMirror(childNode.__zzhl_sn.id);
                 }
             });
         };
@@ -440,8 +440,8 @@ function iterateResolveTree(tree, cb) {
     }
 }
 function isIframeINode(node) {
-    if ('__sn' in node) {
-        return (node.__sn.type === NodeType.Element && node.__sn.tagName === 'iframe');
+    if ('__zzhl_sn' in node) {
+        return (node.__zzhl_sn.type === NodeType.Element && node.__zzhl_sn.tagName === 'iframe');
     }
     return false;
 }

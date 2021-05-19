@@ -82,7 +82,7 @@ var DoubleLinkedList = (function () {
 }());
 var moveKey = function (id, parentId) { return id + "@" + parentId; };
 function isINode(n) {
-    return '__sn' in n;
+    return '__zzhl_sn' in n;
 }
 var MutationBuffer = (function () {
     function MutationBuffer() {
@@ -356,10 +356,10 @@ var MutationBuffer = (function () {
                 _this.movedSet.add(n);
                 var targetId = null;
                 if (target && isINode(target)) {
-                    targetId = target.__sn.id;
+                    targetId = target.__zzhl_sn.id;
                 }
                 if (targetId) {
-                    _this.movedMap[moveKey(n.__sn.id, targetId)] = true;
+                    _this.movedMap[moveKey(n.__zzhl_sn.id, targetId)] = true;
                 }
             }
             else {

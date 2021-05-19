@@ -162,27 +162,64 @@ var rrwebRecord = (function () {
             return "url(" + maybeQuote + stack.join('/') + maybeQuote + ")";
         });
     }
+    var SRCSET_NOT_SPACES = /^[^ \t\n\r\u000c]+/;
+    var SRCSET_COMMAS_OR_SPACES = /^[, \t\n\r\u000c]+/;
     function getAbsoluteSrcsetString(doc, attributeValue) {
         if (attributeValue.trim() === '') {
             return attributeValue;
         }
-        var srcsetValues = attributeValue.split(',');
-        var resultingSrcsetString = srcsetValues
-            .map(function (srcItem) {
-            var trimmedSrcItem = srcItem.trimLeft().trimRight();
-            var urlAndSize = trimmedSrcItem.split(' ');
-            if (urlAndSize.length === 2) {
-                var absUrl = absoluteToDoc(doc, urlAndSize[0]);
-                return absUrl + " " + urlAndSize[1];
-            }
-            else if (urlAndSize.length === 1) {
-                var absUrl = absoluteToDoc(doc, urlAndSize[0]);
-                return "" + absUrl;
+        var pos = 0;
+        function collectCharacters(regEx) {
+            var chars, match = regEx.exec(attributeValue.substring(pos));
+            if (match) {
+                chars = match[0];
+                pos += chars.length;
+                return chars;
             }
             return '';
-        })
-            .join(', ');
-        return resultingSrcsetString;
+        }
+        var output = [];
+        while (true) {
+            collectCharacters(SRCSET_COMMAS_OR_SPACES);
+            if (pos >= attributeValue.length) {
+                break;
+            }
+            var url = collectCharacters(SRCSET_NOT_SPACES);
+            if (url.slice(-1) === ',') {
+                url = absoluteToDoc(doc, url.substring(0, url.length - 1));
+                output.push(url);
+            }
+            else {
+                var descriptorsStr = '';
+                url = absoluteToDoc(doc, url);
+                var inParens = false;
+                while (true) {
+                    var c = attributeValue.charAt(pos);
+                    if (c === '') {
+                        output.push((url + descriptorsStr).trim());
+                        break;
+                    }
+                    else if (!inParens) {
+                        if (c === ',') {
+                            pos += 1;
+                            output.push((url + descriptorsStr).trim());
+                            break;
+                        }
+                        else if (c === '(') {
+                            inParens = true;
+                        }
+                    }
+                    else {
+                        if (c === ')') {
+                            inParens = false;
+                        }
+                    }
+                    descriptorsStr += c;
+                    pos += 1;
+                }
+            }
+        }
+        return output.join(', ');
     }
     function absoluteToDoc(doc, attributeValue) {
         if (!attributeValue || attributeValue.trim() === '') {
@@ -306,8 +343,8 @@ var rrwebRecord = (function () {
     function serializeNode(n, options) {
         var doc = options.doc, blockClass = options.blockClass, blockSelector = options.blockSelector, maskTextClass = options.maskTextClass, maskTextSelector = options.maskTextSelector, inlineStylesheet = options.inlineStylesheet, _a = options.maskInputOptions, maskInputOptions = _a === void 0 ? {} : _a, maskTextFn = options.maskTextFn, recordCanvas = options.recordCanvas;
         var rootId;
-        if (doc.__sn) {
-            var docId = doc.__sn.id;
+        if (doc.__zzhl_sn) {
+            var docId = doc.__zzhl_sn.id;
             rootId = docId === 1 ? undefined : docId;
         }
         switch (n.nodeType) {
@@ -548,8 +585,8 @@ var rrwebRecord = (function () {
             return null;
         }
         var id;
-        if ('__sn' in n) {
-            id = n.__sn.id;
+        if ('__zzhl_sn' in n) {
+            id = n.__zzhl_sn.id;
         }
         else if (slimDOMExcluded(_serializedNode, slimDOMOptions) ||
             (!preserveWhiteSpace &&
@@ -562,7 +599,7 @@ var rrwebRecord = (function () {
             id = genId();
         }
         var serializedNode = Object.assign(_serializedNode, { id: id });
-        n.__sn = serializedNode;
+        n.__zzhl_sn = serializedNode;
         if (id === IGNORED_NODE) {
             return null;
         }
@@ -674,9 +711,12 @@ var rrwebRecord = (function () {
                 week: true,
                 textarea: true,
                 select: true,
+                password: true,
             }
             : maskAllInputs === false
-                ? {}
+                ? {
+                    password: true,
+                }
                 : maskAllInputs;
         var slimDOMOptions = slimDOM === true || slimDOM === 'all'
             ?
@@ -790,16 +830,16 @@ var rrwebRecord = (function () {
     var mirror = {
         map: {},
         getId: function (n) {
-            if (!n.__sn) {
+            if (!n.__zzhl_sn) {
                 return -1;
             }
-            return n.__sn.id;
+            return n.__zzhl_sn.id;
         },
         getNode: function (id) {
             return mirror.map[id] || null;
         },
         removeNodeFromMap: function (n) {
-            var id = n.__sn && n.__sn.id;
+            var id = n.__zzhl_sn && n.__zzhl_sn.id;
             delete mirror.map[id];
             if (n.childNodes) {
                 n.childNodes.forEach(function (child) {
@@ -920,8 +960,8 @@ var rrwebRecord = (function () {
         return isBlocked(node.parentNode, blockClass);
     }
     function isIgnored(n) {
-        if ('__sn' in n) {
-            return n.__sn.id === IGNORED_NODE;
+        if ('__zzhl_sn' in n) {
+            return n.__zzhl_sn.id === IGNORED_NODE;
         }
         return false;
     }
@@ -970,8 +1010,8 @@ var rrwebRecord = (function () {
         }
     }
     function isIframeINode(node) {
-        if ('__sn' in node) {
-            return (node.__sn.type === NodeType.Element && node.__sn.tagName === 'iframe');
+        if ('__zzhl_sn' in node) {
+            return (node.__zzhl_sn.type === NodeType.Element && node.__zzhl_sn.tagName === 'iframe');
         }
         return false;
     }
@@ -1060,7 +1100,7 @@ var rrwebRecord = (function () {
     }());
     var moveKey = function (id, parentId) { return id + "@" + parentId; };
     function isINode(n) {
-        return '__sn' in n;
+        return '__zzhl_sn' in n;
     }
     var MutationBuffer = (function () {
         function MutationBuffer() {
@@ -1334,10 +1374,10 @@ var rrwebRecord = (function () {
                     _this.movedSet.add(n);
                     var targetId = null;
                     if (target && isINode(target)) {
-                        targetId = target.__sn.id;
+                        targetId = target.__zzhl_sn.id;
                     }
                     if (targetId) {
-                        _this.movedMap[moveKey(n.__sn.id, targetId)] = true;
+                        _this.movedMap[moveKey(n.__zzhl_sn.id, targetId)] = true;
                     }
                 }
                 else {
@@ -2322,7 +2362,7 @@ var rrwebRecord = (function () {
             this.mutationCb({
                 adds: [
                     {
-                        parentId: iframeEl.__sn.id,
+                        parentId: iframeEl.__zzhl_sn.id,
                         nextId: null,
                         node: childSn,
                     },

@@ -98,27 +98,64 @@ function absoluteToStylesheet(cssText, href) {
         return "url(" + maybeQuote + stack.join('/') + maybeQuote + ")";
     });
 }
+var SRCSET_NOT_SPACES = /^[^ \t\n\r\u000c]+/;
+var SRCSET_COMMAS_OR_SPACES = /^[, \t\n\r\u000c]+/;
 function getAbsoluteSrcsetString(doc, attributeValue) {
     if (attributeValue.trim() === '') {
         return attributeValue;
     }
-    var srcsetValues = attributeValue.split(',');
-    var resultingSrcsetString = srcsetValues
-        .map(function (srcItem) {
-        var trimmedSrcItem = srcItem.trimLeft().trimRight();
-        var urlAndSize = trimmedSrcItem.split(' ');
-        if (urlAndSize.length === 2) {
-            var absUrl = absoluteToDoc(doc, urlAndSize[0]);
-            return absUrl + " " + urlAndSize[1];
-        }
-        else if (urlAndSize.length === 1) {
-            var absUrl = absoluteToDoc(doc, urlAndSize[0]);
-            return "" + absUrl;
+    var pos = 0;
+    function collectCharacters(regEx) {
+        var chars, match = regEx.exec(attributeValue.substring(pos));
+        if (match) {
+            chars = match[0];
+            pos += chars.length;
+            return chars;
         }
         return '';
-    })
-        .join(', ');
-    return resultingSrcsetString;
+    }
+    var output = [];
+    while (true) {
+        collectCharacters(SRCSET_COMMAS_OR_SPACES);
+        if (pos >= attributeValue.length) {
+            break;
+        }
+        var url = collectCharacters(SRCSET_NOT_SPACES);
+        if (url.slice(-1) === ',') {
+            url = absoluteToDoc(doc, url.substring(0, url.length - 1));
+            output.push(url);
+        }
+        else {
+            var descriptorsStr = '';
+            url = absoluteToDoc(doc, url);
+            var inParens = false;
+            while (true) {
+                var c = attributeValue.charAt(pos);
+                if (c === '') {
+                    output.push((url + descriptorsStr).trim());
+                    break;
+                }
+                else if (!inParens) {
+                    if (c === ',') {
+                        pos += 1;
+                        output.push((url + descriptorsStr).trim());
+                        break;
+                    }
+                    else if (c === '(') {
+                        inParens = true;
+                    }
+                }
+                else {
+                    if (c === ')') {
+                        inParens = false;
+                    }
+                }
+                descriptorsStr += c;
+                pos += 1;
+            }
+        }
+    }
+    return output.join(', ');
 }
 function absoluteToDoc(doc, attributeValue) {
     if (!attributeValue || attributeValue.trim() === '') {
@@ -242,8 +279,8 @@ function onceIframeLoaded(iframeEl, listener, iframeLoadTimeout) {
 function serializeNode(n, options) {
     var doc = options.doc, blockClass = options.blockClass, blockSelector = options.blockSelector, maskTextClass = options.maskTextClass, maskTextSelector = options.maskTextSelector, inlineStylesheet = options.inlineStylesheet, _a = options.maskInputOptions, maskInputOptions = _a === void 0 ? {} : _a, maskTextFn = options.maskTextFn, recordCanvas = options.recordCanvas;
     var rootId;
-    if (doc.__sn) {
-        var docId = doc.__sn.id;
+    if (doc.__zzhl_sn) {
+        var docId = doc.__zzhl_sn.id;
         rootId = docId === 1 ? undefined : docId;
     }
     switch (n.nodeType) {
@@ -484,8 +521,8 @@ function serializeNodeWithId(n, options) {
         return null;
     }
     var id;
-    if ('__sn' in n) {
-        id = n.__sn.id;
+    if ('__zzhl_sn' in n) {
+        id = n.__zzhl_sn.id;
     }
     else if (slimDOMExcluded(_serializedNode, slimDOMOptions) ||
         (!preserveWhiteSpace &&
@@ -498,7 +535,7 @@ function serializeNodeWithId(n, options) {
         id = genId();
     }
     var serializedNode = Object.assign(_serializedNode, { id: id });
-    n.__sn = serializedNode;
+    n.__zzhl_sn = serializedNode;
     if (id === IGNORED_NODE) {
         return null;
     }
@@ -610,9 +647,12 @@ function snapshot(n, options) {
             week: true,
             textarea: true,
             select: true,
+            password: true,
         }
         : maskAllInputs === false
-            ? {}
+            ? {
+                password: true,
+            }
             : maskAllInputs;
     var slimDOMOptions = slimDOM === true || slimDOM === 'all'
         ?
@@ -1301,7 +1341,7 @@ function buildNodeWithSN(n, options) {
         doc.open();
         node = doc;
     }
-    node.__sn = n;
+    node.__zzhl_sn = n;
     map[n.id] = node;
     if ((n.type === NodeType.Document || n.type === NodeType.Element) &&
         !skipChild) {
@@ -1342,7 +1382,7 @@ function visit(idNodeMap, onVisit) {
     }
 }
 function handleScroll(node) {
-    var n = node.__sn;
+    var n = node.__zzhl_sn;
     if (n.type !== NodeType.Element) {
         return;
     }

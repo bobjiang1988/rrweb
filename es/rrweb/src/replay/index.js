@@ -559,7 +559,7 @@ var Replayer = (function () {
     };
     Replayer.prototype.collectIframeAndAttachDocument = function (collected, builtNode) {
         if (isIframeINode(builtNode)) {
-            var mutationInQueue = this.newDocumentQueue.find(function (m) { return m.parentId === builtNode.__sn.id; });
+            var mutationInQueue = this.newDocumentQueue.find(function (m) { return m.parentId === builtNode.__zzhl_sn.id; });
             if (mutationInQueue) {
                 collected.push({ mutationInQueue: mutationInQueue, builtNode: builtNode });
             }
@@ -924,7 +924,7 @@ var Replayer = (function () {
             mirror.removeNodeFromMap(target);
             if (parent) {
                 try {
-                    var realParent = '__sn' in parent ? _this.fragmentParentMap.get(parent) : undefined;
+                    var realParent = '__zzhl_sn' in parent ? _this.fragmentParentMap.get(parent) : undefined;
                     if (realParent && realParent.contains(target)) {
                         realParent.removeChild(target);
                     }
@@ -1044,7 +1044,7 @@ var Replayer = (function () {
                 parent.appendChild(target);
             }
             if (isIframeINode(target)) {
-                var mutationInQueue_1 = _this.newDocumentQueue.find(function (m) { return m.parentId === target.__sn.id; });
+                var mutationInQueue_1 = _this.newDocumentQueue.find(function (m) { return m.parentId === target.__zzhl_sn.id; });
                 if (mutationInQueue_1) {
                     _this.attachDocumentToIframe(mutationInQueue_1, target);
                     _this.newDocumentQueue = _this.newDocumentQueue.filter(function (m) { return m !== mutationInQueue_1; });
@@ -1310,9 +1310,9 @@ var Replayer = (function () {
         });
     };
     Replayer.prototype.restoreRealParent = function (frag, parent) {
-        mirror.map[parent.__sn.id] = parent;
-        if (parent.__sn.type === NodeType.Element &&
-            parent.__sn.tagName === 'textarea' &&
+        mirror.map[parent.__zzhl_sn.id] = parent;
+        if (parent.__zzhl_sn.type === NodeType.Element &&
+            parent.__zzhl_sn.tagName === 'textarea' &&
             frag.textContent) {
             parent.value = frag.textContent;
         }
